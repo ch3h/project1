@@ -6,7 +6,7 @@ if (isset($_SESSION['authorized']))
     $user_id=$_SESSION['user_id'];
     $user_name=$_SESSION['user_name'];
     $user_level=$_SESSION['user_level'];
-    echo "Привет $user_name! Вы авторизованы!<br>";
+    echo "$user_name, вы успешно авторизованы<br>";
     echo '<a href=feed_form.php>Добавить новую заявку</a>';
     
     }

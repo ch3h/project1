@@ -28,7 +28,6 @@ if(!isset($_SESSION['user_authorized'])){
                             $_SESSION['user_level']=$row['user_level'];//права пользователя
                             $_SESSION['authorized']=1;
                             header("Location:my_claims.php");
-    //                        echo "Привет $row[user_name] ! Вы авторизованы!";
                             } 
                         else //если пароли не совпали 			
                             { 				

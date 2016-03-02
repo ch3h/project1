@@ -13,9 +13,6 @@ if (isset($_SESSION['authorized']));
         $claim_name=sanitazeString($_POST['claim_name']);
         $claim_phone=sanitazeString($_POST['claim_phone']);
         $claim_description=sanitazeString($_POST['claim_description']);
-    //    $claim_name=$_POST['claim_name'];
-    //    $claim_phone=$_POST['claim_phone'];
-    //    $claim_description=$_POST['claim_description'];
         if ($claim_name!= "" && $claim_phone!= ""&& $claim_description != "")
             { 
             if (preg_match("/[0-9]+$/",$claim_phone)){
@@ -51,10 +48,6 @@ if (isset($_SESSION['authorized']));
             }       
         } 
     }
-//else{
-//    echo 'Вам необходимо авторизоваться!<br>';
-//    echo "<a href=login.php>Форма авторизации</a>";
-//    }
 if (empty($_SESSION['authorized']))
     {
     echo 'Вам необходимо авторизоваться!<br>';

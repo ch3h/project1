@@ -17,27 +17,20 @@ if (isset($_SESSION['authorized']))
             { 
             if (preg_match("/[0-9]+$/",$claim_phone)){
                 if(strlen($claim_description)>=10){
-                    $query="INSERT INTO `claims`("
-                        . "`claim_id`,"
-                        . "`claim_name`,"
-                        . "`claim_phone`, "
-                        . "`claim_description`, "
-                        . "`claim_image`, "
-                        . "`claim_date_reg`, "
-                        . "`user_id`) VALUES "
-                        . "('',"
-                        . "'$claim_name',"
-                        . "'$claim_phone',"
-                        . "'$claim_description',"
-                        . "'',"
-                        . "unix_timestamp(),"
-                        . "'$_SESSION[user_id]')";
+                    $query="INSERT INTO `claims`
+                        (`claim_id`,`claim_name`,
+                        `claim_phone`, `claim_description`,
+                        `claim_image`,`claim_date_reg`,
+                        `user_id`) 
+                        VALUES 
+                        ('','$claim_name','$claim_phone',
+                        '$claim_description','',unix_timestamp(),
+                        '$_SESSION[user_id]')";
                     if (mysqli_query($link, $query))
-                        {
-//                        $_SESSION['last_id'] = mysqli_insert_id($link); 
+                        { 
                         header("Location:my_claims.php"); 
                         }
-                    else {echo 'Увы, произошло что-то непредвиденное';}
+                    else {echo trigger_error($link->error."[ $query]");}
                     }
                 else {
                     echo 'Длина описания должна быть не менее 10 символов';
@@ -51,13 +44,13 @@ if (isset($_SESSION['authorized']))
         else {
             echo 'Обязательные поля не должны быть пустыми';
             }       
-        } 
+        }
     }
-if (empty($_SESSION['authorized']))
-    {
-    echo 'Вам необходимо авторизоваться<br>';
-    echo '<a href=login.php>Форма авторизации</a>';
-    }
+    if (empty($_SESSION['authorized']))
+        {
+        echo 'Вам необходимо авторизоваться<br>';
+        echo '<a href=login.php>Форма авторизации</a>';
+        }
 function sanitazeString($var)
 {
     $var = stripslashes($var);
@@ -89,6 +82,5 @@ function create_form()
     <form method="POST" action="feed_form.php">
     <input type="submit" value="Выйти" name="log_out" />
     </form>';
-    }
+    }   
 ?>
-

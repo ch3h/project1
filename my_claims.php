@@ -34,8 +34,6 @@ if (isset($_SESSION['authorized']))
                         . "'$_SESSION[user_id]')";
                     if (mysqli_query($link, $query))
                         {
-                        
-                        $_SESSION['last_id']=  mysqli_insert_id($link); 
                         header("Location:my_claims.php"); 
                         }
                     else {echo 'Увы, произошло что-то непредвиденное';}

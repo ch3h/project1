@@ -1,69 +1,80 @@
 <meta charset="UTF-8">
 <?php
+$last_id=0;//на случай отсутствия заявок в таблице
 session_start();
-$link = mysqli_connect("localhost", "root", "", "simpledb");
+$link = mysqli_connect("localhost", "root", "", "test");
 mysqli_set_charset($link, "utf8");
 if (mysqli_connect_errno()) {
         echo "Failed connect to MySQL. ".mysqli_connect_error();
     }
 if (isset($_SESSION['authorized']))
     {
-    create_form();    
-    if(isset($_POST['send'])){
-        $claim_name=sanitazeString($_POST['claim_name']);
-        $claim_phone=sanitazeString($_POST['claim_phone']);
-        $claim_description=sanitazeString($_POST['claim_description']);
-        if ($claim_name!= "" && $claim_phone!= ""&& $claim_description != "")
-            { 
-            if (preg_match("/[0-9]+$/",$claim_phone)){
-                if(strlen($claim_description)>=10){
-                    $query="INSERT INTO `claim`("
-                        . "`claim_id`,"
-                        . "`claim_name`,"
-                        . "`claim_phone`, "
-                        . "`claim_description`, "
-                        . "`claim_image`, "
-                        . "`claim_date_reg`, "
-                        . "`user_id`) VALUES "
-                        . "('',"
-                        . "'$claim_name',"
-                        . "'$claim_phone',"
-                        . "'$claim_description',"
-                        . "'',"
-                        . "unix_timestamp(),"
-                        . "'$_SESSION[user_id]')";
-                    if (mysqli_query($link, $query))
-                        {
-                        header("Location:my_claims.php"); 
-                        }
-                    else {echo 'Увы, произошло что-то непредвиденное';}
-                    }
-                else {
-                    echo 'Длина описания должна быть не менее 10 символов';
-                    }
-                
+    $user_id=$_SESSION['user_id'];
+    $user_name=$_SESSION['user_name'];
+    $user_level=$_SESSION['user_level'];
+    if ($user_level==50){
+        echo "$user_name, ваши заявки:<br><br><br>";
+        $query="SELECT claim_id, claim_name, claim_phone, claim_description, claim_image FROM claims WHERE `user_id`='$user_id'";
+        $query_last_id="SELECT max(claim_id) FROM claims WHERE user_id='$user_id'";
+        if ($result_last=mysqli_query($link,$query_last_id)){
+            $row_last = mysqli_fetch_assoc($result_last);
+            $last_id=$row_last['max(claim_id)'];//id последней добавленной заявки пользователя
+            }         
+        }
+        elseif ($user_level==100) {
+            echo '<b>Заявки пользователей:</b><br><br><br>';
+            $query="SELECT user_id,claim_id, claim_name, claim_phone, claim_description, claim_image FROM claims";
+            $query2="SELECT user_login,user_name,users.user_id,claim_id FROM users,claims WHERE claims.user_id=users.user_id";
+            $result2 = mysqli_query($link, $query2);
+            $row2 = mysqli_fetch_assoc($result2);
+            $query_last_id="SELECT max(claim_id) FROM claims";
+            if ($result_last=mysqli_query($link,$query_last_id)){
+                $row_last=  mysqli_fetch_assoc($result_last);
+                $last_id=$row_last['max(claim_id)'];//id последней любой добавленной заявки (для админа)
                 }
-            else {
-                echo 'Ваш номер должен состоять только из цифр';   
-                }
-            }
-        else {
-            echo 'Обязательные поля не должны быть пустыми';
-            }       
-        } 
-    }
-if (empty($_SESSION['authorized']))
+        
+        }
+    $result = mysqli_query($link,$query);
+    $rows = mysqli_num_rows($result);
+    for ($j=0;$j<$rows;++$j)
     {
-    echo 'Вам необходимо авторизоваться<br>';
+        $row =  mysqli_fetch_assoc($result);
+//        if ($user_level==100 && $row['user_id']==$row2['user_id']){
+          if ($user_level==100){
+            if ($row['claim_id']==$last_id)
+                {echo '<b>';}//Выделение болдом последней добавленной заявки (для админа)          
+                echo 'Логин пользователя оставившего заявку:'.$row2['user_login'].'<br>';
+                echo 'Имя пользователя оставившего заявку:'.$row2['user_name'].'<br>';//Для админа отображается логин и имя пользователя оставившего заявку
+            }
+                if ($user_level==50 && $last_id==$row['claim_id'])                
+                {echo '<b>';}
+                echo 'Наименование заявки:'.$row['claim_name'].'<br>';
+                echo 'Контактный телефон:'.$row['claim_phone'].'<br>';
+                echo 'Описание заявки:'.$row['claim_description'].'<br>';
+                if ($row['claim_id']==$last_id)
+                    {echo '</b>';}//Снятие выделения
+                if(!empty($result->fetch_assoc['claim_image'])){
+                    if ($row['claim_id']==$last_id)
+                        {echo '<b>';}
+                        echo 'Прилагаемое фото:'.$result->fetch_assoc()['claim_image'].'<br><br><br>';
+                    if ($row['claim_id']==$last_id)
+                        {echo '</b>';}
+                        }
+                    else echo '<br><br>';
+        
+        
+    }
+    if ($user_level==50){
+        echo "<a href=feed_form.php>Добавить заявку</a>";
+        }
+    }
+else
+    {
+    echo 'Для просмотра и добавления заявок пожалуйста авторизуйтесь<br>';
     echo '<a href=login.php>Форма авторизации</a>';
     }
-function sanitazeString($var)
-{
-    $var = stripslashes($var);
-    $var = htmlentities($var);
-    $var = strip_tags($var);
-    return $var;    
-}
+    
+    
 if(isset($_POST['log_out'])){
     unset ($_SESSION['authorized']);
     unset ($_SESSION['user_id']);
@@ -71,22 +82,9 @@ if(isset($_POST['log_out'])){
     unset ($_SESSION['user_level']);
     session_destroy();
     }
-function create_form()
-    {
-    echo '<form method="POST" action="feed_form.php">
-    <p><strong>*Название заявки:</strong></p>
-    <p><input type="text" name="claim_name" placeholder="Название заявки"> </p>
-    <p><strong>*Контактный телефон:</strong></p>
-    <p><input type="tel" name="claim_phone" placeholder="Номер телефона"></p>
-    <p><strong>*Описание проблемы:</strong></p> 
-    <p><textarea name="claim_description" placeholder="Опишите вашу проблему" cols="70" rows="15"></textarea></p>
-    <p><strong>Загрузить изображение</strong></p> 
-    <p><input type = "file" name="claim_image" accept ="image/jpeg,image/png"/></p>
-    <p>* Отмечены обязательные поля</p> 
-    <input type="submit" value="Отправить заявку" name="send" />
-    </form>
-    <form method="POST" action="feed_form.php">
-    <input type="submit" value="Выйти" name="log_out" />
-    </form>';
-    }
 ?>
+
+
+<form method="POST" action="my_claims.php">
+<input type="submit" value="Выйти" name="log_out" />
+</form>

@@ -64,6 +64,7 @@ if (isset($_SESSION['authorized']))
     if ($user_level==50){
         echo "<a href=feed_form.php>Добавить заявку</a>";
         }
+    create_exit();
     }
 else
     {
@@ -78,8 +79,10 @@ if(isset($_POST['log_out'])){
     unset ($_SESSION['user_level']);
     session_destroy();
     }
+function create_exit()
+{
+    echo '<form method="POST" action="my_claims.php">
+    <input type="submit" value="Выйти" name="log_out" />
+    </form>';
+}
 ?>
-
-<form method="POST" action="my_claims.php">
-<input type="submit" value="Выйти" name="log_out" />
-</form>

@@ -1,6 +1,7 @@
 <meta charset="UTF-8">
 <?php
 session_start();
+$file_route=NULL;//Добавится в БД если пользователь не загрузил изображение
 $link = mysqli_connect("localhost", "root", "", "test");
 mysqli_set_charset($link, "utf8");
 if (mysqli_connect_errno()) {
@@ -17,14 +18,40 @@ if (isset($_SESSION['authorized']))
             { 
             if (preg_match("/[0-9]+$/",$claim_phone)){
                 if(strlen($claim_description)>=10){
-                    $query="INSERT INTO `claims`
+                    if($_FILES["filename"]["size"]==NULL) goto a;
+                    if($_FILES["filename"]["size"] > 1024*5*1024)
+                        {
+                             echo ("Размерs файла превышает 5 мегабайт");
+                             exit;
+                        }
+                            $imageinfo = getimagesize($_FILES['filename']['tmp_name']);
+                            if($imageinfo['mime'] != 'image/png' && $imageinfo['mime'] != 'image/jpeg')
+                            {
+                                 echo "Только фото в формате jpeg или png";
+                                 exit;
+                            }
+                            // Проверяем загружен ли файл
+                            if(is_uploaded_file($_FILES["filename"]["tmp_name"]))
+                            {
+                              // Если файл загружен успешно, перемещаем его
+                              // из временной директории в конечную
+                              $temp = explode(".", $_FILES["filename"]["name"]);
+                              $newfilename = round(microtime(true)) . '.' . end($temp);
+                              move_uploaded_file($_FILES["filename"]["tmp_name"], "./files/" . $newfilename);
+                              $file_route="files/".$newfilename;
+                            }
+                            else {
+                                echo("Ошибка загрузки файла");
+                                }
+                    a:
+                        $query="INSERT INTO `claims`
                         (`claim_id`,`claim_name`,
                         `claim_phone`, `claim_description`,
                         `claim_image`,`claim_date_reg`,
                         `user_id`) 
                         VALUES 
                         ('','$claim_name','$claim_phone',
-                        '$claim_description','',unix_timestamp(),
+                        '$claim_description','$file_route',unix_timestamp(),
                         '$_SESSION[user_id]')";
                     if (mysqli_query($link, $query))
                         { 
@@ -67,7 +94,7 @@ if(isset($_POST['log_out'])){
     }
 function create_form()
     {
-    echo '<form method="POST" action="feed_form.php">
+    echo '<form method="POST" action="feed_form.php" enctype="multipart/form-data" >
     <p><strong>*Название заявки:</strong></p>
     <p><input type="text" name="claim_name" placeholder="Название заявки"> </p>
     <p><strong>*Контактный телефон:</strong></p>
@@ -75,7 +102,7 @@ function create_form()
     <p><strong>*Описание проблемы:</strong></p> 
     <p><textarea name="claim_description" placeholder="Опишите вашу проблему" cols="70" rows="15"></textarea></p>
     <p><strong>Загрузить изображение</strong></p> 
-    <p><input type = "file" name="claim_image" accept ="image/jpeg,image/png"/></p>
+    <p><input type = "file" name="filename"/></p>
     <p>* Отмечены обязательные поля</p> 
     <input type="submit" value="Отправить заявку" name="send" />
     </form>

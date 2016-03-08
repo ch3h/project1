@@ -1,24 +1,18 @@
-<meta charset="UTF-8">
 <?php
+require_once 'connectDB.php';  
 error_reporting(E_ALL); 
-$link = mysqli_connect("localhost", "root", "", "test");
-mysqli_set_charset($link, "utf8");
-if (mysqli_connect_errno()) {
-        echo "Failed connect to MySQL. ".mysqli_connect_error();
-    }
 if(isset($_POST['log_in'])) 
     if ($_POST['login'] != "" && $_POST['password'] != "")
-        { 		
+        {      
         $login = $_POST['login']; 
         $password = $_POST['password'];
-        $query="SELECT user_id, user_pass, user_name, user_level FROM users WHERE user_login='$login'";
-        $result = mysqli_query($link,$query)or trigger_error("Query Failed! SQL: $query - Error: ".mysqli_error(), E_USER_ERROR);
+        $login_query->execute();
+        $result=$login_query->get_result();
         if (mysqli_num_rows($result)==1) //если нашлась одна строка, значит такой юзер существует в БД 		
             { 			
             $row = mysqli_fetch_assoc($result); 			
             if (md5($password) == $row['user_pass']) //сравниваем хэшированный пароль из БД с хэшированным паролем 						
                 {
-                session_start();
                 $_SESSION['user_id']=$row['user_id'];
                 $_SESSION['user_name']=$row['user_name'];
                 $_SESSION['user_level']=$row['user_level'];//права пользователя
@@ -105,7 +99,7 @@ mysqli_query($link, $query_insert_claims);
 }
 ?>  
 
-<form method="POST" action="login.php">
+<form method="POST" action="index.php">
 Логин: <input type="text" name="login" /><br>
 Пароль: <input type="password" name="password" /><br>
 <input type="submit" value="Войти" name="log_in" />

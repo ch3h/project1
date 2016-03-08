@@ -1,63 +1,59 @@
 <meta charset="UTF-8">
 <?php
 session_start();
-$file_route=NULL;//Добавится в БД если пользователь не загрузил изображение
-$link = mysqli_connect("localhost", "root", "", "test");
-mysqli_set_charset($link, "utf8");
-if (mysqli_connect_errno()) {
-        echo "Failed connect to MySQL. ".mysqli_connect_error();
-    }
+$_SESSION['file_route']=$file_route=NULL;//Добавится в БД если пользователь не загрузил изображение
 if (isset($_SESSION['authorized']))
     {
     create_form();    
     if(isset($_POST['send'])){
-        $claim_name=sanitazeString($_POST['claim_name']);
-        $claim_phone=sanitazeString($_POST['claim_phone']);
-        $claim_description=sanitazeString($_POST['claim_description']);
+        $claim_name=$_POST['claim_name'];
+        $claim_phone=$_POST['claim_phone'];
+        $claim_description=$_POST['claim_description'];
         if ($claim_name!= "" && $claim_phone!= ""&& $claim_description != "")
             { 
             if (preg_match("/[0-9]+$/",$claim_phone)){
                 if(strlen($claim_description)>=10){
-                    if($_FILES["filename"]["size"]==NULL) goto a;
-                    if($_FILES["filename"]["size"] > 1024*5*1024)
+                    $_SESSION['claim_name']=$claim_name;
+                    $_SESSION['claim_phone']=$claim_phone;
+                    $_SESSION['claim_description']=$claim_description;
+                    if($_FILES["filename"]["size"]!=NULL)
                         {
-                             echo ("Размерs файла превышает 5 мегабайт");
-                             exit;
-                        }
-                            $imageinfo = getimagesize($_FILES['filename']['tmp_name']);
-                            if($imageinfo['mime'] != 'image/png' && $imageinfo['mime'] != 'image/jpeg')
+                        if($_FILES["filename"]["size"] > 1024*5*1024)
                             {
-                                 echo "Только фото в формате jpeg или png";
+                            require_once 'connectDB.php';
+                                 echo ("Размерs файла превышает 5 мегабайт");
                                  exit;
                             }
-                            // Проверяем загружен ли файл
-                            if(is_uploaded_file($_FILES["filename"]["tmp_name"]))
-                            {
-                              // Если файл загружен успешно, перемещаем его
-                              // из временной директории в конечную
-                              $temp = explode(".", $_FILES["filename"]["name"]);
-                              $newfilename = round(microtime(true)) . '.' . end($temp);
-                              move_uploaded_file($_FILES["filename"]["tmp_name"], "./files/" . $newfilename);
-                              $file_route="files/".$newfilename;
+                                $imageinfo = getimagesize($_FILES['filename']['tmp_name']);
+                                if($imageinfo['mime'] != 'image/png' && $imageinfo['mime'] != 'image/jpeg')
+                                    {
+                                    echo "Только фото в формате jpeg или png";
+                                    exit;
+                                    }
+                                // Проверяем загружен ли файл
+                                if(is_uploaded_file($_FILES["filename"]["tmp_name"]))
+                                    {
+                                  // Если файл загружен успешно, перемещаем его
+                                  // из временной директории в конечную
+                                  $temp = explode(".", $_FILES["filename"]["name"]);
+                                  $newfilename = round(microtime(true)) . '.' . end($temp);
+                                  move_uploaded_file($_FILES["filename"]["tmp_name"], "./files/" . $newfilename);
+                                  $_SESSION['file_route']=$file_route="files/".$newfilename;
+                                    }
+                                else {
+                                    echo("Ошибка загрузки файла");
+                                    }
+                            require_once 'connectDB.php';
                             }
-                            else {
-                                echo("Ошибка загрузки файла");
-                                }
-                    a:
-                        $query="INSERT INTO `claims`
-                        (`claim_id`,`claim_name`,
-                        `claim_phone`, `claim_description`,
-                        `claim_image`,`claim_date_reg`,
-                        `user_id`) 
-                        VALUES 
-                        ('','$claim_name','$claim_phone',
-                        '$claim_description','$file_route',unix_timestamp(),
-                        '$_SESSION[user_id]')";
-                    if (mysqli_query($link, $query))
+                        else 
+                            {
+                            require_once 'connectDB.php';
+                            }
+                    if ($insert_claims_query->execute())
                         { 
                         header("Location:my_claims.php"); 
                         }
-                    else {echo trigger_error($link->error."[ $query]");}
+                    else {echo trigger_error($link->error."[$insert_claims_query]");}
                     }
                 else {
                     echo 'Длина описания должна быть не менее 10 символов';
@@ -73,25 +69,22 @@ if (isset($_SESSION['authorized']))
             }       
         }
     }
-    if (empty($_SESSION['authorized']))
+//    if (empty($_SESSION['authorized']))
+    else
         {
         echo 'Вам необходимо авторизоваться<br>';
-        echo '<a href=login.php>Форма авторизации</a>';
+        echo '<a href=index.php>Форма авторизации</a>';
         }
-function sanitazeString($var)
-{
-    $var = stripslashes($var);
-    $var = htmlentities($var);
-    $var = strip_tags($var);
-    return $var;    
-}
-if(isset($_POST['log_out'])){
+
+if(isset($_POST['log_out']))
+    {
     unset ($_SESSION['authorized']);
     unset ($_SESSION['user_id']);
     unset ($_SESSION['user_name']);
     unset ($_SESSION['user_level']);
     session_destroy();
     }
+
 function create_form()
     {
     echo '<form method="POST" action="feed_form.php" enctype="multipart/form-data" >

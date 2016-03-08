@@ -69,7 +69,6 @@ if (isset($_SESSION['authorized']))
             }       
         }
     }
-//    if (empty($_SESSION['authorized']))
     else
         {
         echo 'Вам необходимо авторизоваться<br>';

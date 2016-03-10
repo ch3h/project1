@@ -1,38 +1,35 @@
 <?php
-require_once 'connectDB.php';  
+require 'connectDB.php';
 error_reporting(E_ALL); 
-if(isset($_POST['log_in'])) 
-    if ($_POST['login'] != "" && $_POST['password'] != "")
-        {      
+if(isset($_POST['log_in'])){ 
+    if ($_POST['login'] != "" && $_POST['password'] != ""){      
         $login = $_POST['login']; 
         $password = $_POST['password'];
+        $login_query=$link->prepare("SELECT user_id, user_pass, user_name, user_level FROM users WHERE user_login=?");//Запрос на авторизацию
+        $login_query->bind_param('s', $login);
         $login_query->execute();
         $result=$login_query->get_result();
-        if (mysqli_num_rows($result)==1) //если нашлась одна строка, значит такой юзер существует в БД 		
-            { 			
+        if (mysqli_num_rows($result)==1){ //если нашлась одна строка, значит такой юзер существует в БД  			
             $row = mysqli_fetch_assoc($result); 			
-            if (md5($password) == $row['user_pass']) //сравниваем хэшированный пароль из БД с хэшированным паролем 						
-                {
+            if (md5($password) == $row['user_pass']){ //сравниваем хэшированный пароль из БД с хэшированным паролем 						
                 $_SESSION['user_id']=$row['user_id'];
                 $_SESSION['user_name']=$row['user_name'];
                 $_SESSION['user_level']=$row['user_level'];//права пользователя
                 $_SESSION['authorized']=1;
                 header("Location:my_claims.php");
-                } 
-            else //если пароли не совпали 			
-                { 				
+            } 
+            else {//если пароли не совпали 			 				
                 echo "Неверный логин или пароль"; 
-                } 		
             } 		
-        else //если такого пользователя не найдено в БД 		
-            {    			
+        } 		
+        else {//если такого пользователя не найдено в БД 		    			
             echo "Неверный логин или пароль"; 			
-            }
-        } 	
-    else 	
-        { 		
-        echo "Поля не должны быть пустыми"; 				
         }
+    } 	
+    else { 		
+        echo "Поля не должны быть пустыми"; 				
+    }
+}
 //Автосоздание и заполнение таблиц в базе данных TEST
 if(isset ($_POST['create_and_insert'])){
     $query_create_users="CREATE TABLE `users` (

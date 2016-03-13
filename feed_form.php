@@ -1,5 +1,5 @@
 <?php
-require_once 'connectDB.php';
+require_once 'connect_DB.php';
 require_once 'functions.php';
 if (isset($_SESSION['authorized'])) {
     create_form();

@@ -1,12 +1,12 @@
 <?php
-require_once 'connectDB.php';
+require_once 'connect_DB.php';
 require_once 'functions.php';
 if (isset($_SESSION['authorized'])) {
     if (isset($_POST['download_in_xml'])) {
-        header("location:downloadXML.php");
+        header("location:download_XML.php");
     }
     if (isset($_POST['show_in_xml'])) {
-        header("location:toXML.php");
+        header("location:to_XML.php");
     }
     $user_id=$_SESSION['user_id'];
     $user_name=$_SESSION['user_name'];

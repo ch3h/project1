@@ -1,37 +1,40 @@
 <?php
 require 'connectDB.php';
+require_once 'functions.php';
 error_reporting(E_ALL); 
-if(isset($_POST['log_in'])){ 
-    if ($_POST['login'] != "" && $_POST['password'] != ""){      
-        $login = $_POST['login']; 
+if(isset($_POST['log_in'])) {
+    if ($_POST['login'] != "" && $_POST['password'] != "") {
+        $login = $_POST['login'];
         $password = $_POST['password'];
-        $login_query=$link->prepare("SELECT user_id, user_pass, user_name, user_level FROM users WHERE user_login=?");//Запрос на авторизацию
+        //Запрос на авторизацию
+        $login_query=$link->prepare("SELECT user_id, user_pass, user_name, 
+            user_level FROM users WHERE user_login=?");
         $login_query->bind_param('s', $login);
         $login_query->execute();
         $result=$login_query->get_result();
-        if (mysqli_num_rows($result)==1){ //если нашлась одна строка, значит такой юзер существует в БД  			
-            $row = mysqli_fetch_assoc($result); 			
-            if (md5($password) == $row['user_pass']){ //сравниваем хэшированный пароль из БД с хэшированным паролем 						
+        if (mysqli_num_rows($result)==1) { //если нашлась одна строка, значит такой юзер существует в БД
+            $row = mysqli_fetch_assoc($result);
+            if (md5($password) == $row['user_pass']) { //сравниваем хэшированный пароль из БД с хэшированным паролем
                 $_SESSION['user_id']=$row['user_id'];
                 $_SESSION['user_name']=$row['user_name'];
                 $_SESSION['user_level']=$row['user_level'];//права пользователя
                 $_SESSION['authorized']=1;
                 header("Location:my_claims.php");
-            } 
-            else {//если пароли не совпали 			 				
-                echo "Неверный логин или пароль"; 
-            } 		
-        } 		
-        else {//если такого пользователя не найдено в БД 		    			
-            echo "Неверный логин или пароль"; 			
+            }
+            else {//если пароли не совпали 
+                echo "Неверный логин или пароль";
+            }
+        }
+        else {//если такого пользователя не найдено в БД 
+            echo "Неверный логин или пароль";
         }
     } 	
     else { 		
-        echo "Поля не должны быть пустыми"; 				
+        echo "Поля не должны быть пустыми";
     }
 }
 //Автосоздание и заполнение таблиц в базе данных TEST
-if(isset ($_POST['create_and_insert'])){
+if(isset ($_POST['create_and_insert'])) {
     $query_create_users="CREATE TABLE `users` (
                         `user_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                         `user_login` varchar(20) NOT NULL,
@@ -94,7 +97,7 @@ mysqli_query($link, $query_insert_users);
 mysqli_query($link, $query_create_claims);
 mysqli_query($link, $query_insert_claims);
 }
-?>  
+?>
 
 <form method="POST" action="index.php">
 Логин: <input type="text" name="login" /><br>

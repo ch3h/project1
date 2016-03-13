@@ -1,5 +1,5 @@
 <?php
-require 'connectDB.php';
+require 'connect_DB.php';
 require_once 'functions.php';
 error_reporting(E_ALL); 
 if(isset($_POST['log_in'])) {
